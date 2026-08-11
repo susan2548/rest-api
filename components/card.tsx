@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import AnimatedPressable from './AnimatedPressable';
 import { useToast } from './Toast';
 import { colors, radius, sectionColors, shadow, spacing, typography } from '../constants/theme';
@@ -45,21 +45,32 @@ export default function Card({ phone, onDelete }: CardProps) {
   };
 
   const handleCall = () => {
+    if (Platform.OS === 'web') {
+      // Desktop browsers have no dialer to hand tel: links to — copy the number instead.
+      Clipboard.setStringAsync(phone.tel);
+      toast.show('Calling is unavailable in a browser — number copied instead', 'success');
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Linking.openURL(`tel:${phone.tel}`);
   };
 
+  const confirmDelete = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    onDelete(phone._id);
+  };
+
   const handleDelete = () => {
+    if (Platform.OS === 'web') {
+      // Alert.alert has no dialog implementation on web, so its buttons never fire there.
+      if (window.confirm(`Remove "${phone.name}" from the directory?`)) {
+        confirmDelete();
+      }
+      return;
+    }
     Alert.alert('Delete contact', `Remove "${phone.name}" from the directory?`, [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          onDelete(phone._id);
-        },
-      },
+      { text: 'Delete', style: 'destructive', onPress: confirmDelete },
     ]);
   };
 
