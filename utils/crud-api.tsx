@@ -1,10 +1,27 @@
+import Constants from 'expo-constants';
 import axios from 'axios';
 
 /**
- * Point this at your CRUD backend (e.g. the Express/MongoDB "phone" API).
- * Override at runtime with EXPO_PUBLIC_API_URL in a .env file if needed.
+ * Point this at your CRUD backend (e.g. the json-server "phone" API).
+ *
+ * Resolution order:
+ * 1. EXPO_PUBLIC_API_URL, if set in a .env file — use this for a real deployed backend.
+ * 2. The dev server's own LAN host (Constants.expoConfig.hostUri) with port 3000 — this is
+ *    how Expo Go already knows your machine's current IP, so a physical device can reach
+ *    the local API without hardcoding an IP that changes with your network.
+ * 3. localhost:3000 — fallback for web/simulators running on the same machine as the API.
  */
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+function resolveBaseUrl(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+
+  const hostUri = Constants.expoConfig?.hostUri;
+  const devHost = hostUri?.split(':')[0];
+  if (devHost) return `http://${devHost}:3000`;
+
+  return 'http://localhost:3000';
+}
+
+const BASE_URL = resolveBaseUrl();
 
 export type Section = 'CED' | 'TCT';
 
