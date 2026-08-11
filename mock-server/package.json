@@ -1,0 +1,11 @@
+{
+  "name": "mock-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "json-server --watch db.json --id _id --middlewares middleware.js --port 3000"
+  },
+  "dependencies": {
+    "json-server": "0.17.4"
+  }
+}
